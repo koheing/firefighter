@@ -1,4 +1,5 @@
 # firefighter
+[![test](https://github.com/koheing/firefighter/actions/workflows/ci.yml/badge.svg)](https://github.com/koheing/firefighter/actions/workflows/ci.yml)
 
 firefighter is [Firestore](https://firebase.google.com/docs/firestore) REST API wrapper library worked on [@sveltejs/kit](https://kit.svelte.dev/docs) + [Cloudflare Workers](https://workers.cloudflare.com/).  
 This library can write/read firestore with set JWT token (and **fetch** function) authenticated by Firebase Authentication or Google OAuth.
