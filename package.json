@@ -1,6 +1,6 @@
 {
   "name": "firefighter",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Firestore REST API wrapper library worked on sveltekit + Cloudflare Workers",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
