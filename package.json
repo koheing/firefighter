@@ -4,11 +4,6 @@
   "description": "Firestore REST API wrapper library worked on sveltekit + Cloudflare Workers",
   "main": "./lib/index.js",
   "module": "./lib/index.mjs",
-  "exports": {
-    "types": "./lib/index.d.ts",
-    "require": "./lib/index.js",
-    "default": "./lib/index.modern.mjs"
-  },
   "types": "./lib/index.d.ts",
   "scripts": {
     "build": "microbundle",
