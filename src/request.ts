@@ -59,7 +59,7 @@ export function buildRequest(firestore: Firestore, transactionId?: string): Requ
     forQuery(reference: Reference, query: Query): Parameters<typeof fetch> {
       const { path, id } = reference
       const index = path.lastIndexOf(id)
-      const p = `${path.substr(0, index - 1)}:runQuery`
+      const p = `${path.substring(0, index)}:runQuery`
       const init: RequestInit = {
         method: 'post',
         headers,
