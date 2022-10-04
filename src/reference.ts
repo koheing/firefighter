@@ -39,12 +39,14 @@ export interface Reference {
 }
 
 export function reference(firestore: Firestore, path: string, ...paths: string[]): Reference {
-  let p = `${firestore.path}/${path}`
+  let p = firestore.path
+  if (path.startsWith('/')) p += path
+  else p += `/${path}`
+
   if (paths.length > 0) p += '/' + paths.join('/')
 
-  const id = paths.length === 0 ? path : paths[paths.length - 1]
-
   const ps = p.split('/')
+  const id = ps[ps.length - 1]
   return {
     get path(): string {
       return p
