@@ -9,7 +9,7 @@
     "build": "microbundle",
     "test": "jest",
     "lint": "eslint --ext ./src/*.ts",
-    "prettier": "prettier -w ./__tests__ ./src",
+    "format": "prettier -w ./__tests__ ./src",
     "prepublish": "npm run build && npm run test"
   },
   "keywords": [

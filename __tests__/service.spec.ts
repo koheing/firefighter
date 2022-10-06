@@ -41,8 +41,8 @@ describe('service', () => {
         const result = await from(ref, {
           convert: (result) => ({
             id: result.id,
-            name: result.toJson().name,
-            subId: result.toJson().subId,
+            name: result.toJson()?.name,
+            subId: result.toJson()?.subId,
           }),
         }).find()
 
@@ -140,8 +140,8 @@ describe('service', () => {
         const result = await from(ref, {
           convert: (result) => ({
             id: result.id,
-            name: result.toJson().name,
-            subId: result.toJson().subId,
+            name: result.toJson()?.name,
+            subId: result.toJson()?.subId,
           }),
         }).findAll()
 
@@ -280,8 +280,8 @@ describe('service', () => {
         const result = await from(ref, {
           convert: (result) => ({
             id: result.id,
-            name: result.toJson().name,
-            subId: result.toJson().subId,
+            name: result.toJson()?.name,
+            subId: result.toJson()?.subId,
           }),
         }).query(where('id', '==', 'id'))
 
@@ -417,8 +417,8 @@ describe('service', () => {
         const result = await from(ref, {
           convert: (result) => ({
             id: result.id,
-            name: result.toJson().name,
-            subId: result.toJson().subId,
+            name: result.toJson()?.name,
+            subId: result.toJson()?.subId,
           }),
         }).queryAll(where('id', '==', 'id'))
 
@@ -516,6 +516,143 @@ describe('service', () => {
 
         try {
           await from(ref).queryAll(where('id', '==', 'id'))
+        } catch (e) {
+          expect(e).not.toBeUndefined()
+        }
+      })
+    })
+
+    describe('groupQuery', () => {
+      it('get queryresultshot if queryAll result existed', async () => {
+        const fetchMock = jest.fn(() =>
+          Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve([
+                {
+                  document: {
+                    name: 'collection/document',
+                    fields: {
+                      subId: {
+                        stringValue: 'subId',
+                      },
+                      name: {
+                        stringValue: 'name',
+                      },
+                    },
+                  },
+                },
+              ]),
+          })
+        )
+
+        const fs = firestore(
+          { projectId: 'project', token: 'token' },
+          { fetch: fetchMock as unknown as typeof fetch }
+        )
+        const ref = reference(fs, 'collection')
+        const result = await from(ref, {
+          convert: (result) => ({
+            id: result.id,
+            name: result.toJson()?.name,
+            subId: result.toJson()?.subId,
+          }),
+        }).groupQuery(where('id', '==', 'id'))
+
+        expect(result.length).toEqual(1)
+        expect(result.toList()).toEqual([{ id: 'document', name: 'name', subId: 'subId' }])
+      })
+
+      it('get queryresultshot if queryAll result not existed', async () => {
+        const fetchMock = jest.fn(() =>
+          Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({}),
+          })
+        )
+
+        const fs = firestore(
+          { projectId: 'project' },
+          { fetch: fetchMock as unknown as typeof fetch }
+        )
+        const ref = reference(fs, 'collection')
+
+        const result = await from(ref).groupQuery(where('id', '==', 'id'))
+
+        expect(result.length).toEqual(0)
+        expect(result.toList()).toEqual([])
+      })
+
+      it('get queryresultshot if queryAll result existed but empty', async () => {
+        const fetchMock = jest.fn(() =>
+          Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve([{ name: 'collection/document' }]),
+          })
+        )
+
+        const fs = firestore(
+          { projectId: 'project' },
+          { fetch: fetchMock as unknown as typeof fetch }
+        )
+        const ref = reference(fs, 'collection')
+
+        const result = await from(ref).groupQuery(where('id', '==', 'id'))
+
+        expect(result.length).toEqual(0)
+        expect(result.toList()).toEqual([])
+      })
+
+      it('get collectionresultshot if 404 error occured', async () => {
+        const fetchMock = jest.fn(() =>
+          Promise.resolve({
+            ok: false,
+            json: () =>
+              Promise.resolve({
+                error: {
+                  code: 404,
+                  message: 'data not found',
+                },
+              }),
+          })
+        )
+
+        const fs = firestore(
+          { projectId: 'project' },
+          { fetch: fetchMock as unknown as typeof fetch }
+        )
+        const ref = reference(fs, 'collection')
+
+        const result = await from(ref).groupQuery(where('id', '==', 'id'))
+
+        expect(result.length).toEqual(0)
+        expect(result.toList()).toEqual([])
+      })
+
+      it('throw error if error occured, except 404', async () => {
+        const fetchMock = jest.fn(() =>
+          Promise.resolve({
+            ok: false,
+            json: () =>
+              Promise.resolve([
+                {
+                  error: {
+                    code: 401,
+                    message: 'unauthorized',
+                  },
+                },
+              ]),
+          })
+        )
+
+        const fs = firestore(
+          { projectId: 'project' },
+          { fetch: fetchMock as unknown as typeof fetch }
+        )
+        const ref = reference(fs, 'collection')
+
+        try {
+          await from(ref).groupQuery(where('id', '==', 'id'))
         } catch (e) {
           expect(e).not.toBeUndefined()
         }

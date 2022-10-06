@@ -15,7 +15,7 @@ export class DocumentResult<T = JsonDocument> {
     const n = this.fDoc.name.split('/')
     return n[n.length - 1]
   }
-  toJson(): T | undefined {
+  toJson(): T {
     if (!this.exists) return undefined
     const doc = jsonify(this.fDoc)
 
