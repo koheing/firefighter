@@ -76,12 +76,12 @@ const ref = reference(fs, 'collection')
 
 const convert: FromConverter = (result) => ({ id: result.id, ...result.toJson() })
 
-const { query, queryAll } = await from(ref, { convert, picks: ['documentProperty'] } /* option */)
+const { query, groupQuery } = await from(ref, { convert, picks: ['documentProperty'] } /* option */)
 
 let result = await query(where('count', '>', 1), offset(10))
 console.log(result.toList())
 
-let result = await queryAll(where('count', '>', 1), offset(10))
+let result = await groupQuery(where('count', '>', 1), offset(10))
 console.log(result.toList())
 ```
 
