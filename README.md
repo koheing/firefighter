@@ -2,7 +2,7 @@
 [![test](https://github.com/koheing/firefighter/actions/workflows/ci.yml/badge.svg)](https://github.com/koheing/firefighter/actions/workflows/ci.yml)
 
 firefighter is [Firestore](https://firebase.google.com/docs/firestore) REST API wrapper library worked on [@sveltejs/kit](https://kit.svelte.dev/docs) + [Cloudflare Workers](https://workers.cloudflare.com/).  
-This library can write/read firestore with set JWT token (and **fetch** function) authenticated by Firebase Authentication or Google OAuth.
+This library can write/read firestore with set JWT (and **fetch** function) authenticated by Firebase Authentication or Google OAuth.
 
 ## why
 
@@ -27,7 +27,7 @@ npm install firefighter
 ## imporant
 
 - **[gRPC Listen](https://cloud.google.com/firestore/docs/reference/rpc/google.firestore.v1#google.firestore.v1.ListenRequest) (called onSnapshot function in official firestore library) is not supported**
-- It is not recommended to have a firestore instance globally as the Firestore objects in this library do not automatically update the JWT token.
+- It is not recommended to have a firestore instance globally as the Firestore objects in this library do not automatically update the JWT.
 
 # usage
 
@@ -37,9 +37,9 @@ npm install firefighter
 import { firestore, reference, from } from 'firefighter'
 import type { FromConverter } from 'firefighter'
 
-const jwtToken = 'eyJhbGciOiJSUzI...'
+const token = 'eyJhbGciOiJSUzI...'
 
-const fs = firestore({ projectId: 'projectId', token: jwtToken }, { fetch: fetch } /* option */)
+const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection', 'document')
 const convert: FromConverter = (result) => ({ id: result.id, ...result.toJson() })
 
@@ -53,9 +53,9 @@ console.log(result.toJson())
 import { firestore, reference, from } from 'firefighter'
 import type { FromConverter } from 'firefighter'
 
-const jwtToken = 'eyJhbGciOiJSUzI...'
+const token = 'eyJhbGciOiJSUzI...'
 
-const fs = firestore({ projectId: 'projectId', token: jwtToken }, { fetch: fetch } /* option */)
+const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection')
 const convert: FromConverter = (result) => ({ id: result.id, ...result.toJson() })
 
@@ -69,9 +69,9 @@ console.log(result.toList())
 import { firestore, reference, from, where, offset } from 'firefighter'
 import type { FromConverter } from 'firefighter'
 
-const jwtToken = 'eyJhbGciOiJSUzI...'
+const token = 'eyJhbGciOiJSUzI...'
 
-const fs = firestore({ projectId: 'projectId', token: jwtToken }, { fetch: fetch } /* option */)
+const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection')
 
 const convert: FromConverter = (result) => ({ id: result.id, ...result.toJson() })
@@ -91,9 +91,9 @@ console.log(result.toList())
 import { firestore, reference, on, increment } from 'firefighter'
 import type { ToConverter } from 'firefighter'
 
-const jwtToken = 'eyJhbGciOiJSUzI...'
+const token = 'eyJhbGciOiJSUzI...'
 
-const fs = firestore({ projectId: 'projectId', token: jwtToken }, { fetch: fetch } /* option */)
+const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection', 'document')
 
 const convert: ToConverter = (data: { id: string; name: string; count: number }) => ({
@@ -114,9 +114,9 @@ await del()
 import { firestore, reference, on } from 'firefighter'
 import type { ToConverter } from 'firefighter'
 
-const jwtToken = 'eyJhbGciOiJSUzI...'
+const token = 'eyJhbGciOiJSUzI...'
 
-const fs = firestore({ projectId: 'projectId', token: jwtToken }, { fetch: fetch } /* option */)
+const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection')
 
 const convert: ToConverter = (data: { id: string; name: string; count: number }) => ({
@@ -133,9 +133,9 @@ const documentId = await on(ref, { convert } /* option */).create(data)
 ```typescript
 import { firestore, reference, batcher, transactor } from 'firefighter'
 
-const jwtToken = 'eyJhbGciOiJSUzI...'
+const token = 'eyJhbGciOiJSUzI...'
 
-const fs = firestore({ projectId: 'projectId', token: jwtToken }, { fetch: fetch } /* option */)
+const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const batch = batcher(fs)
 
 batch.set(reference(fs, 'collection', 'document'), { name: 'user', count: 1 })
