@@ -88,9 +88,29 @@ export function from<T = JsonDocument>(reference: Reference, option: FromOption<
     /**
      * Query data from **all same name** collection.
      * You can use **where**, **orderBy**, **start**, **end**, **limit**, **offset**
+     * @deprecated Please use `groupQuery`. This will be removed \@1.0.0
      * @see https://cloud.google.com/firestore/docs/reference/rest/v1/projects.databases.documents/runQuery
      */
     async queryAll(...queryElements: QueryElement[]): Promise<QueryResult<T>> {
+      const q = buildQuery(reference, queryElements, option.picks as string[], true)
+      const fetcher = reference.firestore.fetch as typeof fetch
+
+      const pickDocuments = (data: { document?: FirestoreDocument }[]) =>
+        data && data.length > 0 && !!data[0].document ? data.map((it) => it.document) : []
+
+      const data = await request<{ document?: FirestoreDocument }[]>(
+        fetcher,
+        buildRequest(reference.firestore).forQuery(reference, q),
+        { disable404: true }
+      )
+      return new QueryResult(pickDocuments(data), convert)
+    },
+    /**
+     * Query data from **all same name** collection.
+     * You can use **where**, **orderBy**, **start**, **end**, **limit**, **offset**
+     * @see https://cloud.google.com/firestore/docs/reference/rest/v1/projects.databases.documents/runQuery
+     */
+    async groupQuery(...queryElements: QueryElement[]): Promise<QueryResult<T>> {
       const q = buildQuery(reference, queryElements, option.picks as string[], true)
       const fetcher = reference.firestore.fetch as typeof fetch
 
