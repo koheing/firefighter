@@ -6,7 +6,7 @@ This library can write/read firestore with set JWT (and **fetch** function) auth
 
 ## why
 
-[Official Firestore library](https://github.com/firebase/firebase-js-sdk) is awesome library, but currently , in 2021-11-10, cannot work on [Loading](https://kit.svelte.dev/docs#loading) and [Endpoints](https://kit.svelte.dev/docs#routing-endpoints) of [@sveltejs/kit](https://kit.svelte.dev/docs) + Cloudflare Workers.  
+[Official Firestore library](https://github.com/firebase/firebase-js-sdk) is awesome library, but currently , in 2021-11-10, cannot work on [page.js](https://kit.svelte.dev/docs/routing#page) and [server.js](https://kit.svelte.dev/docs/routing#server) of [@sveltejs/kit](https://kit.svelte.dev/docs) + Cloudflare Workers.  
 So, I made this library.
 
 ## feature
