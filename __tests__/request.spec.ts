@@ -1,7 +1,7 @@
 import { firestore, reference } from '../src/reference'
-import { buildRequest } from '../src/request'
+import { buildRequestParameters } from '../src/request'
 
-describe('buildRequest', () => {
+describe('buildRequestParameters', () => {
   const fetchMock = jest.fn(() =>
     Promise.resolve({
       ok: false,
@@ -23,7 +23,9 @@ describe('buildRequest', () => {
   describe('forFind', () => {
     it('build url with mask query and transaction', () => {
       const ref = reference(fs, 'collection', 'document')
-      const [url] = buildRequest(fs, 'transactionId').forFind(ref, { picks: ['id', 'name'] })
+      const [url] = buildRequestParameters(fs, 'transactionId').forFind(ref, {
+        picks: ['id', 'name'],
+      })
 
       expect(url).toEqual(
         `https://firestore.googleapis.com/v1/projects/project/databases/(default)/documents/collection/document?transaction=transactionId&mask.fieldPaths=id&mask.fieldPaths=name`
@@ -32,7 +34,7 @@ describe('buildRequest', () => {
 
     it('build url without mask query and transaction', () => {
       const ref = reference(fs, 'collection', 'document')
-      const [url] = buildRequest(fs).forFind(ref)
+      const [url] = buildRequestParameters(fs).forFind(ref)
 
       expect(url).toEqual(
         `https://firestore.googleapis.com/v1/projects/project/databases/(default)/documents/collection/document`
@@ -43,7 +45,9 @@ describe('buildRequest', () => {
   describe('forFindAll', () => {
     it('build url with mask query and transaction', () => {
       const ref = reference(fs, 'collection', 'document')
-      const [url] = buildRequest(fs, 'transactionId').forFindAll(ref, { picks: ['id', 'name'] })
+      const [url] = buildRequestParameters(fs, 'transactionId').forFindAll(ref, {
+        picks: ['id', 'name'],
+      })
 
       expect(url).toEqual(
         `https://firestore.googleapis.com/v1/projects/project/databases/(default)/documents/collection/document?transaction=transactionId&mask.fieldPaths=id&mask.fieldPaths=name`
@@ -52,7 +56,7 @@ describe('buildRequest', () => {
 
     it('build url without mask query and transaction', () => {
       const ref = reference(fs, 'collection', 'document')
-      const [url] = buildRequest(fs).forFindAll(ref)
+      const [url] = buildRequestParameters(fs).forFindAll(ref)
 
       expect(url).toEqual(
         `https://firestore.googleapis.com/v1/projects/project/databases/(default)/documents/collection/document`
