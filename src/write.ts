@@ -109,10 +109,10 @@ export type WriteBuilder = {
   build: () => { writes: Write[]; transaction?: string }
   set: <T = JsonDocument>(
     reference: Reference<T>,
-    data: JsonDocument,
+    data: T,
     option?: SetOption
   ) => WriteBuilder
-  update: <T = JsonDocument>(reference: Reference<T>, data: JsonDocument) => WriteBuilder
+  update: <T = JsonDocument>(reference: Reference<T>, data: T) => WriteBuilder
   delete: <T = JsonDocument>(reference: Reference<T>) => WriteBuilder
 }
 
