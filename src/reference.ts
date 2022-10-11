@@ -1,3 +1,6 @@
+import type { JsonDocument } from './model'
+import type { FromConverter, ToConverter } from './service'
+
 export type Credential = {
   projectId: string
   /**
@@ -31,14 +34,33 @@ export function firestore(credential: Credential, option?: FirestoreOption): Fir
   }
 }
 
-export interface Reference {
+export interface Reference<T extends JsonDocument = JsonDocument> extends Record<string, unknown> {
   readonly path: string
   readonly id: string
   readonly firestore: Firestore
-  readonly parent: Reference
+  readonly parent: Reference<T>
+  /**
+   * @param options {ConvertOptions}
+   */
+  withConverter: <T>(options?: ConvertOptions<T>) => Reference<T>
 }
 
-export function reference(firestore: Firestore, path: string, ...paths: string[]): Reference {
+export type ConvertOptions<T = JsonDocument> = {
+  /**
+   * convert fetched data to something in client
+   */
+  from?: FromConverter<T>
+  /**
+   * convert data to something in client before data sent
+   */
+  to?: ToConverter<T>
+}
+
+export function reference<T = JsonDocument>(
+  firestore: Firestore,
+  path: string,
+  ...paths: string[]
+): Reference<T> {
   let p = firestore.path
   if (path.startsWith('/')) p += path
   else p += `/${path}`
@@ -47,6 +69,9 @@ export function reference(firestore: Firestore, path: string, ...paths: string[]
 
   const ps = p.split('/')
   const id = ps[ps.length - 1]
+
+  let opt: ConvertOptions<JsonDocument>
+
   return {
     get path(): string {
       return p
@@ -59,6 +84,13 @@ export function reference(firestore: Firestore, path: string, ...paths: string[]
     },
     get parent() {
       return reference(firestore, ps[ps.length - 2])
+    },
+    withConverter<T = JsonDocument>(options: ConvertOptions<T>) {
+      opt = options
+      return this
+    },
+    get options() {
+      return opt
     },
   }
 }

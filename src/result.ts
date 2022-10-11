@@ -10,7 +10,7 @@ export class DocumentResult<T = JsonDocument> {
   get exists(): boolean {
     return !!this.fDoc && !!this.fDoc.fields
   }
-  get id(): string | undefined {
+  get id(): string {
     if (!this.exists) return undefined
     const n = this.fDoc.name.split('/')
     return n[n.length - 1]
