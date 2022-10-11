@@ -6,19 +6,28 @@ import type { Firestore, Reference } from './reference'
 import type { FindOption } from './service'
 import type { WriteBuilder } from './write'
 
-export type RequestBuilder = {
-  forFind: (reference: Reference, option?: FindOption<JsonDocument>) => Parameters<typeof fetch>
-  forFindAll: (reference: Reference, option?: FindOption<JsonDocument>) => Parameters<typeof fetch>
-  forQuery: (reference: Reference, query: Query) => Parameters<typeof fetch>
-  forCreate: (
-    reference: Reference,
-    data: JsonDocument,
+export type RequestParameterBuilder = {
+  forFind: <T = JsonDocument>(
+    reference: Reference<T>,
+    option?: FindOption<T>
+  ) => Parameters<typeof fetch>
+  forFindAll: <T = JsonDocument>(
+    reference: Reference<T>,
+    option?: FindOption<T>
+  ) => Parameters<typeof fetch>
+  forQuery: <T = JsonDocument>(reference: Reference<T>, query: Query) => Parameters<typeof fetch>
+  forCreate: <T = JsonDocument>(
+    reference: Reference<T>,
+    data: T,
     documentId: DocumentId
   ) => Parameters<typeof fetch>
   forBatch: (manager: WriteBuilder) => Parameters<typeof fetch>
 }
 
-export function buildRequest(firestore: Firestore, transactionId?: string): RequestBuilder {
+export function buildRequestParameters(
+  firestore: Firestore,
+  transactionId?: string
+): RequestParameterBuilder {
   const {
     credential: { token },
   } = firestore
@@ -28,7 +37,10 @@ export function buildRequest(firestore: Firestore, transactionId?: string): Requ
   }
 
   return {
-    forFind(reference: Reference, option?: FindOption<unknown>): Parameters<typeof fetch> {
+    forFind<T = JsonDocument>(
+      reference: Reference<T>,
+      option?: FindOption<unknown>
+    ): Parameters<typeof fetch> {
       let { path: p } = reference
       const q = urlQuerify({
         transaction: transactionId,
@@ -42,7 +54,10 @@ export function buildRequest(firestore: Firestore, transactionId?: string): Requ
 
       return [p, init]
     },
-    forFindAll(reference: Reference, option?: FindOption<unknown>): Parameters<typeof fetch> {
+    forFindAll<T = JsonDocument>(
+      reference: Reference<T>,
+      option?: FindOption<unknown>
+    ): Parameters<typeof fetch> {
       let { path: p } = reference
       const q = urlQuerify({
         transaction: transactionId,
@@ -56,7 +71,7 @@ export function buildRequest(firestore: Firestore, transactionId?: string): Requ
 
       return [p, init]
     },
-    forQuery(reference: Reference, query: Query): Parameters<typeof fetch> {
+    forQuery<T = JsonDocument>(reference: Reference<T>, query: Query): Parameters<typeof fetch> {
       const { path, id } = reference
       const index = path.lastIndexOf(id)
       const p = `${path.substring(0, index)}:runQuery`
@@ -68,8 +83,8 @@ export function buildRequest(firestore: Firestore, transactionId?: string): Requ
 
       return [p, init]
     },
-    forCreate(
-      reference: Reference,
+    forCreate<T = JsonDocument>(
+      reference: Reference<T>,
       data: JsonDocument,
       documentId: DocumentId
     ): Parameters<typeof fetch> {

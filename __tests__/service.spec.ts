@@ -13,7 +13,7 @@ describe('service', () => {
 
   describe('from', () => {
     describe('find', () => {
-      it('get documentresultshot if document existed', async () => {
+      it('get documentresult if document existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -36,21 +36,16 @@ describe('service', () => {
           { projectId: 'project' },
           { fetch: fetchMock as unknown as typeof fetch }
         )
-        const ref = reference(fs, 'collection', 'document')
-
-        const result = await from(ref, {
-          convert: (result) => ({
-            id: result.id,
-            name: result.toJson()?.name,
-            subId: result.toJson()?.subId,
-          }),
-        }).find()
+        const ref = reference(fs, 'collection', 'document').withConverter({
+          from: (it) => ({ id: it.id, name: it.toJson().name, subId: it.toJson().subId }),
+        })
+        const result = await from(ref).find()
 
         expect(result.toJson()).toEqual({ id: 'document', name: 'name', subId: 'subId' })
       })
     })
 
-    it('get documentresultshot if 404 error occured', async () => {
+    it('get documentresult if 404 error occured', async () => {
       const fetchMock = jest.fn(() =>
         Promise.resolve({
           ok: false,
@@ -108,7 +103,7 @@ describe('service', () => {
     })
 
     describe('findAll', () => {
-      it('get collectionresultshot if collection existed', async () => {
+      it('get collectionresult if collection existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -149,7 +144,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([{ id: 'document', name: 'name', subId: 'subId' }])
       })
 
-      it('get collectionresultshot if collection not existed', async () => {
+      it('get collectionresult if collection not existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -169,7 +164,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([])
       })
 
-      it('get collectionresultshot if collection existed but empty', async () => {
+      it('get collectionresult if collection existed but empty', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -192,7 +187,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([])
       })
 
-      it('get collectionresultshot if 404 error occured', async () => {
+      it('get collectionresult if 404 error occured', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: false,
@@ -249,7 +244,7 @@ describe('service', () => {
     })
 
     describe('query', () => {
-      it('get queryresultshot if query result existed', async () => {
+      it('get queryresult if query result existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -289,7 +284,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([{ id: 'document', name: 'name', subId: 'subId' }])
       })
 
-      it('get queryresultshot if query result not existed', async () => {
+      it('get queryresult if query result not existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -309,7 +304,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([])
       })
 
-      it('get queryresultshot if query result existed but empty', async () => {
+      it('get queryresult if query result existed but empty', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -329,7 +324,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([])
       })
 
-      it('get collectionresultshot if 404 error occured', async () => {
+      it('get collectionresult if 404 error occured', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: false,
@@ -386,7 +381,7 @@ describe('service', () => {
     })
 
     describe('queryAll', () => {
-      it('get queryresultshot if queryAll result existed', async () => {
+      it('get queryresult if queryAll result existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -426,7 +421,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([{ id: 'document', name: 'name', subId: 'subId' }])
       })
 
-      it('get queryresultshot if queryAll result not existed', async () => {
+      it('get queryresult if queryAll result not existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -446,7 +441,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([])
       })
 
-      it('get queryresultshot if queryAll result existed but empty', async () => {
+      it('get queryresult if queryAll result existed but empty', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -466,7 +461,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([])
       })
 
-      it('get collectionresultshot if 404 error occured', async () => {
+      it('get collectionresult if 404 error occured', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: false,
@@ -523,7 +518,7 @@ describe('service', () => {
     })
 
     describe('groupQuery', () => {
-      it('get queryresultshot if queryAll result existed', async () => {
+      it('get queryresult if queryAll result existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -563,7 +558,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([{ id: 'document', name: 'name', subId: 'subId' }])
       })
 
-      it('get queryresultshot if queryAll result not existed', async () => {
+      it('get queryresult if queryAll result not existed', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -583,7 +578,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([])
       })
 
-      it('get queryresultshot if queryAll result existed but empty', async () => {
+      it('get queryresult if queryAll result existed but empty', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: true,
@@ -603,7 +598,7 @@ describe('service', () => {
         expect(result.toList()).toEqual([])
       })
 
-      it('get collectionresultshot if 404 error occured', async () => {
+      it('get collectionresult if 404 error occured', async () => {
         const fetchMock = jest.fn(() =>
           Promise.resolve({
             ok: false,
@@ -900,8 +895,14 @@ describe('service', () => {
       const b = batcher(fs)
 
       b.delete(reference(fs, 'collection', 'document'))
-      b.set(reference(fs, 'collection', 'document'), { name: 'name' })
-      b.update(reference(fs, 'collection', 'document'), { name: 'name1' })
+      b.set(
+        reference(fs, 'collection', 'document').withConverter<{ name: string }>({ to: (it) => it }),
+        { name: 'name' }
+      )
+      b.update(
+        reference(fs, 'collection', 'document').withConverter<{ name: string }>({ to: (it) => it }),
+        { name: 'name1' }
+      )
 
       try {
         await b.commit()

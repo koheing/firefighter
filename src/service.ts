@@ -1,9 +1,9 @@
-import type { Firestore, Reference } from './reference'
+import type { ConvertOptions, Firestore, Reference } from './reference'
 import { CollectionResult, DocumentResult, QueryResult } from './result'
 import type { FirestoreDocument, JsonDocument } from './model'
 import { documentId } from './id'
 import type { DocumentId } from './id'
-import { buildRequest, request } from './request'
+import { buildRequestParameters, request } from './request'
 import { buildQuery } from './query'
 import type { QueryElement } from './query'
 import { writeBuilder } from './write'
@@ -32,7 +32,7 @@ export type FromOption<T> = ConvertOption<FromConverter<T>> & FindOption<T>
  * @param option.convert convert fetched data to something in client
  * @param option.picks The fields on document to return from Firestore. If not set, returns all fields.
  */
-export function from<T = JsonDocument>(reference: Reference, option: FromOption<T> = {}) {
+export function from<T = JsonDocument>(reference: Reference<T>, option: FromOption<T> = {}) {
   const { convert } = option
   return {
     /**
@@ -43,11 +43,16 @@ export function from<T = JsonDocument>(reference: Reference, option: FromOption<
       const fetcher = reference.firestore.fetch as typeof fetch
       const data = await request<FirestoreDocument>(
         fetcher,
-        buildRequest(reference.firestore).forFind(reference, option as FindOption<unknown>),
+        buildRequestParameters(reference.firestore).forFind(
+          reference,
+          option as FindOption<unknown>
+        ),
         { disable404: true }
       )
 
-      return new DocumentResult(data, convert)
+      const options: ConvertOptions<T> | undefined = reference.options
+      const c = options?.from ?? convert
+      return new DocumentResult(data, c)
     },
     /**
      * Find multiple documents.
@@ -60,11 +65,16 @@ export function from<T = JsonDocument>(reference: Reference, option: FromOption<
 
       const data = await request<{ documents: FirestoreDocument[] }>(
         fetcher,
-        buildRequest(reference.firestore).forFindAll(reference, option as FindOption<unknown>),
+        buildRequestParameters(reference.firestore).forFindAll(
+          reference,
+          option as FindOption<unknown>
+        ),
         { disable404: true }
       )
 
-      return new CollectionResult(pickDocuments(data), convert)
+      const options: ConvertOptions<T> | undefined = reference.options
+      const c = options?.from ?? convert
+      return new CollectionResult(pickDocuments(data), c)
     },
     /**
      * Query data from collection.
@@ -80,10 +90,13 @@ export function from<T = JsonDocument>(reference: Reference, option: FromOption<
 
       const data = await request<{ document?: FirestoreDocument }[]>(
         fetcher,
-        buildRequest(reference.firestore).forQuery(reference, q),
+        buildRequestParameters(reference.firestore).forQuery(reference, q),
         { disable404: true }
       )
-      return new QueryResult(pickDocuments(data), convert)
+
+      const options: ConvertOptions<T> | undefined = reference.options
+      const c = options?.from ?? convert
+      return new QueryResult(pickDocuments(data), c)
     },
     /**
      * Query data from **all same name** collection.
@@ -100,10 +113,13 @@ export function from<T = JsonDocument>(reference: Reference, option: FromOption<
 
       const data = await request<{ document?: FirestoreDocument }[]>(
         fetcher,
-        buildRequest(reference.firestore).forQuery(reference, q),
+        buildRequestParameters(reference.firestore).forQuery(reference, q),
         { disable404: true }
       )
-      return new QueryResult(pickDocuments(data), convert)
+
+      const options: ConvertOptions<T> | undefined = reference.options
+      const c = options?.from ?? convert
+      return new QueryResult(pickDocuments(data), c)
     },
     /**
      * Query data from **all same name** collection.
@@ -119,10 +135,13 @@ export function from<T = JsonDocument>(reference: Reference, option: FromOption<
 
       const data = await request<{ document?: FirestoreDocument }[]>(
         fetcher,
-        buildRequest(reference.firestore).forQuery(reference, q),
+        buildRequestParameters(reference.firestore).forQuery(reference, q),
         { disable404: true }
       )
-      return new QueryResult(pickDocuments(data), convert)
+
+      const options: ConvertOptions<T> | undefined = reference.options
+      const c = options?.from ?? convert
+      return new QueryResult(pickDocuments(data), c)
     },
   }
 }
@@ -131,7 +150,7 @@ export function from<T = JsonDocument>(reference: Reference, option: FromOption<
  * Update data on Firestore
  */
 export function on<T = JsonDocument>(
-  reference: Reference,
+  reference: Reference<T>,
   option: ConvertOption<ToConverter<T>> = {}
 ) {
   const { convert } = option
@@ -142,7 +161,9 @@ export function on<T = JsonDocument>(
      * @param option default merge: **false**
      */
     async set(data: T, option: SetOption = { merge: false }): Promise<void> {
-      const d = convert ? convert(data) : data
+      const options: ConvertOptions<T> = reference.options
+      const c = options?.to ?? convert
+      const d = c ? c(data) : data
       await batcher(reference.firestore).set(reference, d, option).commit()
     },
     /**
@@ -150,7 +171,9 @@ export function on<T = JsonDocument>(
      * Use **increment**, **maximum**, **minimum**, **append**, **remove**, **serverTimestamp** if you'd like to use [FieldTransform](https://cloud.google.com/firestore/docs/reference/rest/v1/Write#FieldTransform)
      */
     async update(data: T): Promise<void> {
-      const d = convert ? convert(data) : data
+      const options: ConvertOptions<T> = reference.options
+      const c = options?.to ?? convert
+      const d = c ? c(data) : data
       await batcher(reference.firestore).update(reference, d).commit()
     },
     /**
@@ -166,7 +189,10 @@ export function on<T = JsonDocument>(
     async create(data: T): Promise<DocumentId> {
       const fetcher = reference.firestore.fetch as typeof fetch
       const docId = documentId()
-      await request(fetcher, buildRequest(reference.firestore).forCreate(reference, data, docId))
+      await request(
+        fetcher,
+        buildRequestParameters(reference.firestore).forCreate(reference, data, docId)
+      )
       return docId
     },
   }
@@ -178,16 +204,16 @@ export interface Batcher {
    * Use **increment**, **maximum**, **minimum**, **append**, **remove**, **serverTimestamp** if you'd like to use [FieldTransform](https://cloud.google.com/firestore/docs/reference/rest/v1/Write#FieldTransform)
    * @param option.merge default **false**
    */
-  set: <T = JsonDocument>(reference: Reference, data: T, option?: SetOption) => Batcher
+  set: <T = JsonDocument>(reference: Reference<T>, data: T, option?: SetOption) => Batcher
   /**
    * Update data.
    * Use **increment**, **maximum**, **minimum**, **append**, **remove**, **serverTimestamp** if you'd like to use [FieldTransform](https://cloud.google.com/firestore/docs/reference/rest/v1/Write#FieldTransform)
    */
-  update: <T = JsonDocument>(reference: Reference, data: T) => Batcher
+  update: <T = JsonDocument>(reference: Reference<T>, data: T) => Batcher
   /**
    * Delete data.
    */
-  delete: (reference: Reference) => Batcher
+  delete: <T = JsonDocument>(reference: Reference<T>) => Batcher
   /**
    * @see https://cloud.google.com/firestore/docs/reference/rest/v1/projects.databases.documents/commit
    */
@@ -200,21 +226,25 @@ export interface Batcher {
 export function batcher(firestore: Firestore): Batcher {
   const builder = writeBuilder()
   return {
-    set<T = JsonDocument>(reference: Reference, data: T, option: SetOption = { merge: false }) {
-      builder.set(reference, data, option)
+    set<T = JsonDocument>(reference: Reference<T>, data: T, option: SetOption = { merge: false }) {
+      const convert: ConvertOptions<T> | undefined = reference.options
+      const d = convert?.to?.(data) ?? data
+      builder.set(reference, d, option)
       return this
     },
-    update<T = JsonDocument>(reference: Reference, data: T) {
-      builder.update(reference, data)
+    update<T = JsonDocument>(reference: Reference<T>, data: T) {
+      const convert: ConvertOptions<T> | undefined = reference.options
+      const d = convert?.to?.(data) ?? data
+      builder.update(reference, d)
       return this
     },
-    delete(reference: Reference) {
+    delete(reference: Reference<JsonDocument>) {
       builder.delete(reference)
       return this
     },
     async commit() {
       const fetcher = firestore.fetch as typeof fetch
-      await request(fetcher, buildRequest(firestore).forBatch(builder))
+      await request(fetcher, buildRequestParameters(firestore).forBatch(builder))
     },
   }
 }
@@ -227,7 +257,7 @@ export interface Transaction {
    * @param option.picks The fields on document to return from Firestore. If not set, returns all fields.
    */
   find: <T = JsonDocument>(
-    reference: Reference,
+    reference: Reference<T>,
     option?: ConvertOption<FromConverter<T>> & FindOption<T>
   ) => Promise<DocumentResult<T>>
   /**
@@ -237,7 +267,7 @@ export interface Transaction {
    * @param option.picks The fields on document to return from Firestore. If not set, returns all fields.
    */
   findAll: <T = JsonDocument>(
-    reference: Reference,
+    reference: Reference<T>,
     option?: ConvertOption<FromConverter<T>> & FindOption<T>
   ) => Promise<CollectionResult<T>>
   /**
@@ -245,18 +275,19 @@ export interface Transaction {
    * Use **increment**, **maximum**, **minimum**, **append**, **remove**, **serverTimestamp** if you'd like to use [FieldTransform](https://cloud.google.com/firestore/docs/reference/rest/v1/Write#FieldTransform)
    * @param option.merge default **false**
    */
-  set: (reference: Reference, data: JsonDocument, option?: SetOption) => Transaction
+  set: <T = JsonDocument>(reference: Reference<T>, data: T, option?: SetOption) => Transaction
   /**
    * Update data.
    * Use **increment**, **maximum**, **minimum**, **append**, **remove**, **serverTimestamp** if you'd like to use [FieldTransform](https://cloud.google.com/firestore/docs/reference/rest/v1/Write#FieldTransform)
    */
-  update: (reference: Reference, data: JsonDocument) => Transaction
+  update: <T = JsonDocument>(reference: Reference<T>, data: T) => Transaction
   /**
    * Delete data.
    */
-  delete: (reference: Reference) => Transaction
+  delete: <T = JsonDocument>(reference: Reference<T>) => Transaction
 }
-type NonPromise<T> = T extends Promise<infer U> ? U : T
+
+type NonPromise<T> = T extends Promise<infer U> ? U : never
 
 /**
  * Optimistic transaction
@@ -274,30 +305,34 @@ export function transactor(firestore: Firestore): {
   const builder = writeBuilder()
   const transaction: Transaction = {
     async find<T = JsonDocument>(
-      reference: Reference,
+      reference: Reference<T>,
       option?: ConvertOption<FromConverter<T>> & FindOption<T>
     ) {
       return await from(reference, option).find()
     },
     async findAll<T = JsonDocument>(
-      reference: Reference,
+      reference: Reference<T>,
       option?: ConvertOption<FromConverter<T>> & FindOption<T>
     ) {
       return await from(reference, option).findAll()
     },
-    set(
-      reference: Reference,
-      data: JsonDocument,
+    set<T = JsonDocument>(
+      reference: Reference<T>,
+      data: T,
       option: SetOption = { merge: false }
     ): Transaction {
-      builder.set(reference, data, option)
+      const convert: ConvertOptions<T> | undefined = reference.options
+      const d = convert?.to?.(data) ?? data
+      builder.set(reference, d, option)
       return this
     },
-    update(reference: Reference, data: JsonDocument) {
-      builder.update(reference, data)
+    update<T = JsonDocument>(reference: Reference<T>, data: T) {
+      const convert: ConvertOptions<T> | undefined = reference.options
+      const d = convert?.to?.(data) ?? data
+      builder.update(reference, d)
       return this
     },
-    delete(reference: Reference) {
+    delete<T = JsonDocument>(reference: Reference<T>) {
       builder.delete(reference)
       return this
     },
@@ -314,7 +349,7 @@ export function transactor(firestore: Firestore): {
           if (result instanceof Promise) await result
 
           const fetcher = firestore.fetch as typeof fetch
-          await request(fetcher, buildRequest(firestore).forBatch(builder))
+          await request(fetcher, buildRequestParameters(firestore).forBatch(builder))
 
           return result as NonPromise<T>
         } catch (e) {

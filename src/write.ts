@@ -107,27 +107,35 @@ export function serverTimestamp(): Transformer {
 
 export type WriteBuilder = {
   build: () => { writes: Write[]; transaction?: string }
-  set: (reference: Reference, data: JsonDocument, option?: SetOption) => WriteBuilder
-  update: (reference: Reference, data: JsonDocument) => WriteBuilder
-  delete: (reference: Reference) => WriteBuilder
+  set: <T = JsonDocument>(
+    reference: Reference<T>,
+    data: T,
+    option?: SetOption
+  ) => WriteBuilder
+  update: <T = JsonDocument>(reference: Reference<T>, data: T) => WriteBuilder
+  delete: <T = JsonDocument>(reference: Reference<T>) => WriteBuilder
 }
 
 export function writeBuilder(transactionId?: string): WriteBuilder {
   const writes: Write[] = []
   return {
-    set(reference: Reference, data: JsonDocument, option: SetOption = { merge: false }) {
+    set<T = JsonDocument>(
+      reference: Reference<T>,
+      data: JsonDocument,
+      option: SetOption = { merge: false }
+    ) {
       const { path } = reference
       const p = path.replace('https://firestore.googleapis.com/v1/', '')
       writes.push(buildWrite(p, data, option.merge))
       return this
     },
-    update(reference: Reference, data: JsonDocument) {
+    update<T = JsonDocument>(reference: Reference<T>, data: JsonDocument) {
       const { path } = reference
       const p = path.replace('https://firestore.googleapis.com/v1/', '')
       writes.push(buildWrite(p, data, true))
       return this
     },
-    delete(reference: Reference) {
+    delete<T = JsonDocument>(reference: Reference<T>) {
       const { path } = reference
       const p = path.replace('https://firestore.googleapis.com/v1/', '')
       writes.push(buildWrite(p))

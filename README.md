@@ -41,9 +41,9 @@ const token = 'eyJhbGciOiJSUzI...'
 
 const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection', 'document')
-const convert: FromConverter = (result) => ({ id: result.id, ...result.toJson() })
+  .withConverter({ from: (result) => ({ id: result.id, ...result.toJson() }) })
 
-const result = await from(ref, { convert, picks: ['documentProperty'] } /* option */).find()
+const result = await from(ref, { picks: ['documentProperty'] } /* option */).find()
 console.log(result.toJson())
 ```
 
@@ -57,9 +57,9 @@ const token = 'eyJhbGciOiJSUzI...'
 
 const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection')
-const convert: FromConverter = (result) => ({ id: result.id, ...result.toJson() })
+  .withConverter({ from: (result) => ({ id: result.id, ...result.toJson() }) })
 
-const result = await from(ref, { convert, picks: ['documentProperty'] } /* option */).findAll()
+const result = await from(ref, { picks: ['documentProperty'] } /* option */).findAll()
 console.log(result.toList())
 ```
 
@@ -73,10 +73,9 @@ const token = 'eyJhbGciOiJSUzI...'
 
 const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection')
+  .withConverter({ from: (result) => ({ id: result.id, ...result.toJson() }) })
 
-const convert: FromConverter = (result) => ({ id: result.id, ...result.toJson() })
-
-const { query, groupQuery } = await from(ref, { convert, picks: ['documentProperty'] } /* option */)
+const { query, groupQuery } = await from(ref, { picks: ['documentProperty'] } /* option */)
 
 let result = await query(where('count', '>', 1), offset(10))
 console.log(result.toList())
@@ -95,14 +94,10 @@ const token = 'eyJhbGciOiJSUzI...'
 
 const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection', 'document')
-
-const convert: ToConverter = (data: { id: string; name: string; count: number }) => ({
-  name: data.name,
-  count: data.count,
-})
+  .withConverter<{ name: string, count: number }>({ to: (data) => ({ name: data.name, count: data.count }) })
 
 const data = { id: 'document', name: 'user', count: 1 }
-const { set, update, delete: del } = on(ref, { convert } /* option */)
+const { set, update, delete: del } = on(ref)
 await set(data)
 await update({ count: increment(1) })
 await del()
@@ -119,13 +114,8 @@ const token = 'eyJhbGciOiJSUzI...'
 const fs = firestore({ projectId: 'projectId', token }, { fetch: fetch } /* option */)
 const ref = reference(fs, 'collection')
 
-const convert: ToConverter = (data: { id: string; name: string; count: number }) => ({
-  name: data.name,
-  count: data.count,
-})
-
 const data = { id: 'document', name: 'user', count: 1 }
-const documentId = await on(ref, { convert } /* option */).create(data)
+const documentId = await on(ref).create(data)
 ```
 
 ## commit (batch, transaction)

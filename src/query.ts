@@ -154,8 +154,8 @@ export function offset(from: number): QueryElement {
   }
 }
 
-export function buildQuery(
-  reference: Reference,
+export function buildQuery<T = JsonDocument>(
+  reference: Reference<T>,
   queries: QueryElement[],
   picks?: string[],
   allDescendants = false
